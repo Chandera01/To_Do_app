@@ -1,6 +1,7 @@
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:todo_app/note_model.dart';
 
 class DbHelper{
 
@@ -45,28 +46,45 @@ class DbHelper{
   ///make function for add Task this function is first call initial db function when initdb is not null so db is open whenever db is created
 
   ///insert query
-  Future<bool> addTask ({required String title,required String desc,required String dueDateAt})async{
+  Future<bool> addTask (NoteModel newNote)async{
     Database db = await initDb();
-   int rowseffected = await db.insert(TABLE_TASK, {
+   int rowseffected = await db.insert(TABLE_TASK, newNote.toMap()
+     /*{
      TABLE_COLUMN_TITLE : title,
      TABLE_COLUMN_DESC : desc,
      TABLE_COLUMN_COMPLETED : 0,
      TABLE_COLUMN_CREATED_AT : DateTime.now().microsecondsSinceEpoch.toString(),
      TABLE_COLUMN_COMPLETEDATE : dueDateAt,
-    });
+    }*/
+   );
    //return true if the insertion was successful
     print("Rows effected succsesfully");
    return rowseffected>0;
   }
 
   ///Select query
-  Future<List<Map<String,dynamic>>> fetchalltask() async{
+ /* Future<List<Map<String,dynamic>>> fetchalltask() async{
   //first call function init
   Database db  = await initDb();
   //db.query for select query function
   List<Map<String,dynamic>> allTask  = await db.query(TABLE_TASK);
 
     return allTask;
+  }*/
+
+  ///Select Query by NoteModel
+  Future<List<NoteModel>> fetchalltask() async{
+    Database db = await initDb();
+    List<NoteModel> mtask = [];
+
+    List<Map<String,dynamic>> allTask  = await db.query(TABLE_TASK);
+
+    for(Map<String,dynamic> eachdata in allTask){
+      NoteModel eachtask = NoteModel.fromMap(eachdata);
+      mtask.add(eachtask);
+    }
+
+    return mtask;
   }
 
 

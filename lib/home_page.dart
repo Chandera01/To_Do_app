@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:todo_app/db_helper.dart';
+import 'package:todo_app/note_model.dart';
 
 class Homepage extends StatefulWidget {
   @override
@@ -14,7 +15,7 @@ class _HomepageState extends State<Homepage> {
 
   DbHelper dbHelper = DbHelper.instance;
 
-  List<Map<String, dynamic>> tasks = [];
+  List<NoteModel> tasks = [];
   String dueDate = "";
   DateFormat dtformate = DateFormat.MMMMEEEEd();
 
@@ -45,29 +46,29 @@ class _HomepageState extends State<Homepage> {
                 var task = tasks[index]; // 'task' refers to a single task (Map) at the current index
                 return ListTile(
                   leading: Checkbox(
-                      value: task['t_completed'] == 1,
+                      value: task.complted == 1,
                       onChanged: (bool? value) async {
                         if (value != null) {
                           print("updated checkbox");
-                          String title = task['t_title'];
-                          String desc = task['t_desc'];
+                          String title = tasks[index].title;
+                          String desc = tasks[index].desc;
                           await dbHelper.updateTask(
-                              task['t_id'], title, desc, value);
+                              task.id!, title, desc, value);
                           getTask();
                         } 
                       }),
                   title: Text(
-                    task['t_title'],
+                    task.title,
                     style: TextStyle(
-                        decoration: task['t_completed'] == 1
+                        decoration: task.complted == 1
                             ? TextDecoration.lineThrough
                             : TextDecoration.none),
                   ),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Desc:${task['t_desc']}"),
-                      Text(dtformate.format(DateTime.fromMicrosecondsSinceEpoch(int.parse(tasks[index][DbHelper.TABLE_COLUMN_COMPLETEDATE])))),
+                      Text("Desc:${task.desc}"),
+                      Text(dtformate.format(DateTime.fromMicrosecondsSinceEpoch(int.parse(tasks[index].completedDate)))),
 
                     ],
                   ),
@@ -79,8 +80,8 @@ class _HomepageState extends State<Homepage> {
                     children: [
                       IconButton(
                           onPressed: () {
-                            titilecontroller.text = task["t_title"];
-                            descController.text = task["t_desc"];
+                            titilecontroller.text = task.title;
+                            descController.text = task.desc;
                             //
                             //
                             /////Update ShowModel bottomSheet
@@ -159,12 +160,12 @@ class _HomepageState extends State<Homepage> {
                                                             .toString()
                                                             .isNotEmpty &&
                                                         descController.toString().isNotEmpty) {
-                                                      bool isCompleted = task['t_completed'] == 1;
+                                                      bool isCompleted = task.complted == 1;
 
                                                       bool check = await dbHelper
                                                           .updateTask(
-                                                              task['t_id'],
-                                                              titilecontroller.text.toString(), titilecontroller.text.toString(),
+                                                              task.id!,
+                                                              titilecontroller.text.toString(), descController.text.toString(),
                                                               isCompleted);
 
                                                       if (check) {
@@ -194,7 +195,7 @@ class _HomepageState extends State<Homepage> {
                       IconButton(
                           onPressed: () async {
                             bool check = await dbHelper.deleatenote(
-                                id: tasks[index]["t_id"]);
+                                id: tasks[index].id!);
                             if (check) {
                               getTask();
                             }
@@ -291,11 +292,16 @@ class _HomepageState extends State<Homepage> {
                                     onPressed: () async {
                                       if (titilecontroller.text.isNotEmpty &&
                                           descController.text.isNotEmpty) {
-                                        bool check = await dbHelper.addTask(
-                                            title: titilecontroller.text.toString(),
-                                            desc: descController.text.toString(),
-                                          dueDateAt: dueDate,
-                                        );
+                                        bool check = await dbHelper.addTask(NoteModel(
+                                            title: titilecontroller.text,
+                                            desc: descController.text,
+                                            complted: 0,
+                                            createdAt: DateTime.now().microsecondsSinceEpoch.toString(),
+                                            completedDate : dueDate,
+                                          /*title: titilecontroller.text.toString(),
+                                          desc: descController.text.toString(),
+                                          dueDateAt: dueDate,*/
+                                          ));
                                         if (check) {
                                           titilecontroller.clear();
                                           descController.clear();
